@@ -48,6 +48,86 @@ running k3s-cluster via:
     kubectl get all --all-namespaces
 ```
 
+### Knwon issues
+
+####
+
+[Bitnami issue](https://github.com/bitnami/charts/issues/35164) The DSC has been updated to use images from the bitnamilegacy repository as a temporary workaround.
+However, some images cannot be modified through the values.yaml file and must be changed by directly editing the Deployments (e.g., provider-apisix-control-plane and provider-apisix-data-plane).
+
+```sh
+kubectl get deploy provider-apisix-data-plane -o yaml \
+  | sed 's|image: docker.io/bitnami/|image: docker.io/bitnamilegacy/|g' \
+  | kubectl apply -f -
+```
+
+```sh
+kubectl get deploy provider-apisix-control-plane -o yaml \
+  | sed 's|image: docker.io/bitnami/|image: docker.io/bitnamilegacy/|g' \
+  | kubectl apply -f -
+```
+
+Additionally, the Mongo image being used is the latest secured version, since the one from the bitnamilegacy repository does not support the ARM architecture.
+Therefore, it is necessary to modify the BAE Marketplace initContainer to include the credentials.
+
+```sh
+kubectl get sts provider-biz-ecosystem-logic-proxy  -o yaml | \
+yq '.spec.template.spec.initContainers[0] = {
+  "name": "biz-ecosystem-logic-proxy-wait-for-mongodb",
+  "image": "bitnamilegacy/mongodb:3.6.21",
+  "imagePullPolicy": "IfNotPresent",
+  "env": [
+    {
+      "name": "MONGO_PASS",
+      "valueFrom": {
+        "secretKeyRef": {
+          "name": "marketplace-secret",
+          "key": "mongodb-root-password"
+        }
+      }
+    }
+  ],
+  "command": [
+    "sh",
+    "-c",
+    "while ! mongo --host \"mongodb\" -u root -p \"$MONGO_PASS\" --eval \"printjson(db.serverStatus())\"; do echo \"Waiting for MongoDB\"; ((i++)) && ((i==60)) && break; sleep 5; done;"
+  ]
+}' | kubectl apply -f -
+```
+
+```sh
+kubectl rollout restart statefulset provider-biz-ecosystem-logic-proxy
+```
+
+```sh
+kubectl get deploy provider-biz-ecosystem-charging-backend  -o yaml | \
+yq '.spec.template.spec.initContainers[0] = {
+  "name": "biz-ecosystem-logic-proxy-wait-for-mongodb",
+  "image": "bitnamilegacy/mongodb:3.6.21",
+  "imagePullPolicy": "IfNotPresent",
+  "env": [
+    {
+      "name": "MONGO_PASS",
+      "valueFrom": {
+        "secretKeyRef": {
+          "name": "marketplace-secret",
+          "key": "mongodb-root-password"
+        }
+      }
+    }
+  ],
+  "command": [
+    "sh",
+    "-c",
+    "while ! mongo --host \"mongodb\" -u root -p \"$MONGO_PASS\" --eval \"printjson(db.serverStatus())\"; do echo \"Waiting for MongoDB\"; ((i++)) && ((i==60)) && break; sleep 5; done;"
+  ]
+}' | kubectl apply -f -
+```
+
+```sh
+kubectl rollout restart deploy provider-biz-ecosystem-charging-backend
+```
+
 ## The Data Space
 
 ![Overview](../../img/local/overview.jpg)
