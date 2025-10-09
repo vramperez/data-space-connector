@@ -1,4 +1,23 @@
 apisix:
+  global:
+    security:
+      # allow the image from the legacy repo
+      allowInsecureImages: true
+  image:
+    repository: bitnamilegacy/apisix
+  ingressController:
+    image:
+      repository: bitnamilegacy/apisix-ingress-controller
+  waitContainer:
+    image:
+      repository: bitnamilegacy/os-shell
+  etcd:
+    global:
+      security:
+        # allow the image from the legacy repo
+        allowInsecureImages: true
+    image:
+      repository: bitnamilegacy/etcd
   image:
     debug: true
   dataPlane:
@@ -350,6 +369,12 @@ mysql:
       enabled: false
 
 postgis:
+  global:
+    security:
+      # allow the image from the legacy repo
+      allowInsecureImages: true
+  image:
+    repository: bitnamilegacy/postgresql
   primary:
     resourcesPreset: none
     persistence:
@@ -359,6 +384,12 @@ postgis:
       enabled: false
 
 postgresql:
+  global:
+    security:
+      # allow the image from the legacy repo
+      allowInsecureImages: true
+  image:
+    repository: bitnamilegacy/postgresql
   primary:
     resourcesPreset: none
     persistence:
@@ -522,6 +553,14 @@ trusted-issuers-list:
 
 mongodb:
   enabled: true
+  global:
+    security:
+      # allow the image from the legacy repo
+      allowInsecureImages: true
+  image:
+    registry: docker.io
+    repository: bitnamisecure/mongodb
+    tag: latest
   resourcesPreset: none
   persistence:
     enabled: false
@@ -560,7 +599,7 @@ marketplace:
   bizEcosystemChargingBackend:  
     deployment:
       image:
-        tag: 10.0.1
+        tag: 10.5.0-PRE-1
     extraEnvVars:
       - name: BAE_CB_MONGO_PASS
         valueFrom:
@@ -618,6 +657,9 @@ marketplace:
         path: /tmf-api/productInventory/v4
 
   bizEcosystemLogicProxy:
+    statefulset:
+      image:
+        tag: 10.4.0-PRE-1
     command:
       - /prep/prep.sh
     ingress: 
@@ -649,10 +691,19 @@ marketplace:
             key: MONGO_BAE_BELP_PW
       - name: NODE_TLS_REJECT_UNAUTHORIZED
         value: "0"
-      - name: VC_HTTPS_PROXY
+      - name: HTTPS_PROXY
         value: "http://squid-proxy.infra.svc.cluster.local:8888"
 
 keycloak:
+  global:
+    security:
+      # allow the image from the legacy repo
+      allowInsecureImages: true
+  # -- configuration of the used image
+  image:
+    # -- repository where the image is held, see https://github.com/bitnami/charts/issues/35164 for further info
+    repository: bitnamilegacy/keycloak
+    tag: 26.3.2-debian-12-r0
   ingress:
     enabled: true
     hostname: keycloak-provider.127.0.0.1.nip.io
