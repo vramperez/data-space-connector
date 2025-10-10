@@ -56,13 +56,13 @@ running k3s-cluster via:
 However, some images cannot be modified through the values.yaml file and must be changed by directly editing the Deployments (e.g., provider-apisix-control-plane and provider-apisix-data-plane).
 
 ```sh
-kubectl get deploy provider-apisix-data-plane -o yaml \
+kubectl -n provider get deploy provider-apisix-data-plane -o yaml \
   | sed 's|image: docker.io/bitnami/|image: docker.io/bitnamilegacy/|g' \
   | kubectl apply -f -
 ```
 
 ```sh
-kubectl get deploy provider-apisix-control-plane -o yaml \
+kubectl -n provider get deploy provider-apisix-control-plane -o yaml \
   | sed 's|image: docker.io/bitnami/|image: docker.io/bitnamilegacy/|g' \
   | kubectl apply -f -
 ```
@@ -71,7 +71,7 @@ Additionally, the Mongo image being used is the latest secured version, since th
 Therefore, it is necessary to modify the BAE Marketplace initContainer to include the credentials.
 
 ```sh
-kubectl get sts provider-biz-ecosystem-logic-proxy  -o yaml | \
+kubectl -n provider get sts provider-biz-ecosystem-logic-proxy  -o yaml | \
 yq '.spec.template.spec.initContainers[0] = {
   "name": "biz-ecosystem-logic-proxy-wait-for-mongodb",
   "image": "bitnamilegacy/mongodb:3.6.21",
@@ -96,11 +96,11 @@ yq '.spec.template.spec.initContainers[0] = {
 ```
 
 ```sh
-kubectl rollout restart statefulset provider-biz-ecosystem-logic-proxy
+kubectl -n provider rollout restart statefulset provider-biz-ecosystem-logic-proxy
 ```
 
 ```sh
-kubectl get deploy provider-biz-ecosystem-charging-backend  -o yaml | \
+kubectl -n provider get deploy provider-biz-ecosystem-charging-backend  -o yaml | \
 yq '.spec.template.spec.initContainers[0] = {
   "name": "biz-ecosystem-logic-proxy-wait-for-mongodb",
   "image": "bitnamilegacy/mongodb:3.6.21",
@@ -121,11 +121,11 @@ yq '.spec.template.spec.initContainers[0] = {
     "-c",
     "while ! mongo --host \"mongodb\" -u root -p \"$MONGO_PASS\" --eval \"printjson(db.serverStatus())\"; do echo \"Waiting for MongoDB\"; ((i++)) && ((i==60)) && break; sleep 5; done;"
   ]
-}' | kubectl apply -f -
+}' | kubectl -n provider apply -f -
 ```
 
 ```sh
-kubectl rollout restart deploy provider-biz-ecosystem-charging-backend
+kubectl -n provider rollout restart deploy provider-biz-ecosystem-charging-backend
 ```
 
 ## The Data Space
@@ -1488,7 +1488,7 @@ This will load the keystore into a secret and configures the [realm](../../../ch
     # add the init container that copies the plugin to the shared folder
     - name: install-jades-issuer
       image: quay.io/fiware/keycloak-jades-vc-issuer:1.2.0
-      imagePullPolicy: Always
+      imagePullPolicy: IfNotPresent
       volumeMounts:
         - name: providers
           mountPath: /target
@@ -1536,7 +1536,7 @@ dss:
   deployment: 
     additionalContainers:
       - name: crl-provider-static
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         image: "lipanski/docker-static-website:2.1.0"
         volumeMounts:
           - name: crl-provider-json
