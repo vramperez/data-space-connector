@@ -93,7 +93,7 @@ dss:
   deployment: 
     additionalContainers:
       - name: crl-provider-static
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         image: "lipanski/docker-static-website:2.1.0"
         volumeMounts:
           - name: crl-provider-json

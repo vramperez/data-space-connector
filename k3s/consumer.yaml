@@ -47,7 +47,8 @@ keycloak:
       exec /opt/bitnami/scripts/keycloak/entrypoint.sh /opt/bitnami/scripts/keycloak/run.sh  
   initContainers:
     - name: get-did
-      image: ubuntu
+      image: ubuntu:22.04
+      imagePullPolicy: IfNotPresent
       command:
         - /bin/bash
       args:
@@ -71,7 +72,8 @@ keycloak:
           mountPath: /did-material
 
     - name: register-at-tir
-      image: ubuntu
+      image: ubuntu:22.04
+      imagePullPolicy: IfNotPresent
       command:
         - /bin/bash
       args:
@@ -896,5 +898,5 @@ registration:
   did: ${DID}
   credentialTypes:
     - LegalPersonCredential
-    - UserCredential
+    # - UserCredential
   prepScript: export $(curl -f -X GET did-helper:3001/did-material/did.env)

@@ -53,21 +53,7 @@ running k3s-cluster via:
 ####
 
 [Bitnami issue](https://github.com/bitnami/charts/issues/35164) The DSC has been updated to use images from the bitnamilegacy repository as a temporary workaround.
-However, some images cannot be modified through the values.yaml file and must be changed by directly editing the Deployments (e.g., provider-apisix-control-plane and provider-apisix-data-plane).
-
-```sh
-kubectl -n provider get deploy provider-apisix-data-plane -o yaml \
-  | sed 's|image: docker.io/bitnami/|image: docker.io/bitnamilegacy/|g' \
-  | kubectl apply -f -
-```
-
-```sh
-kubectl -n provider get deploy provider-apisix-control-plane -o yaml \
-  | sed 's|image: docker.io/bitnami/|image: docker.io/bitnamilegacy/|g' \
-  | kubectl apply -f -
-```
-
-Additionally, the Mongo image being used is the latest secured version, since the one from the bitnamilegacy repository does not support the ARM architecture.
+However, the Mongo image being used is the latest secured version, since the one from the bitnamilegacy repository does not support the ARM architecture.
 Therefore, it is necessary to modify the BAE Marketplace initContainer to include the credentials.
 
 ```sh

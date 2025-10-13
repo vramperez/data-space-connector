@@ -44,7 +44,7 @@ keycloak:
   initContainers:
     - name: install-jades-issuer
       image: quay.io/fiware/keycloak-jades-vc-issuer:1.2.0
-      imagePullPolicy: Always
+      imagePullPolicy: IfNotPresent
       volumeMounts:
         - name: providers
           mountPath: /target
